@@ -1,0 +1,65 @@
+---
+title: "Ischemic Heart Disease data - Poisson regression model"
+author: "AyşegülBinbaş"
+date: "04 11 2022"
+output: word_document
+---
+
+
+```{r}
+
+library(readxl)
+heart <- read_excel("heart.xlsx")
+
+
+
+
+model3 <- glm(visits ~., heart, family = poisson(link = "log"))
+summary(model3)
+
+
+#µ=ly(Y) = expo(0.478+ id(6.01*e^-5) +(1.49e^-5)x1 + (6.724e−03)x2  +(1.81e−01)x3 + (1.02e−02)x4 + (1.93e−01)x5 + (6.19e−02)x6 − (9.2e−04)x7 + (3.48e−04)x8)
+
+
+
+best.model3 <- step(model3, direction = "backward", trace = F)$call #In order to get best model
+best.model3 <- glm(best.model3, family = poisson(link = "log"), data = heart)
+summary(best.model3)
+
+
+
+#For the first model:
+deviance(model3)  #1043.119
+qchisq(0.05, df.residual(model3), lower.tail = F)  # 844.0001
+
+#Since deviance of model3 is greater than the qchisq ,we can say that model is not good fit.
+
+
+#For the best model:
+
+deviance(best.model3)  #1044.686
+qchisq(0.05, df.residual(best.model3), lower.tail = F)  # 847.1252
+
+
+
+
+library(AER)
+library(overdisp)
+dispersiontest(model3)
+#the p-value is less than the alpha ,so we have overdispersion problem.
+
+
+model3.1 <- glm(visits~., family = quasipoisson, heart)
+summary(model3.1)
+model3.2 <- glm.nb(visits~., heart)
+summary(model3.2)
+
+
+
+#When we compare the model result, it can be seen that model give the best result negative binomial.
+
+
+
+
+```
+
